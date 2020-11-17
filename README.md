@@ -28,4 +28,4 @@ python save_model.py --weights ./data/custom.weights --output ./checkpoints/cust
  
  python detect.py --weights ./checkpoints/custom-416 --size 416 --model yolov4 --images ./data/images/car2.jpg --plate
 
-# Když nefunguje vložte "pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'" na poslední řádek core\utils.py
+ (Když nefunguje vložte "pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'" na poslední řádek core\utils.py)

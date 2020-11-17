@@ -1,63 +1,31 @@
-# Zoneminder instalace
+# YOLOv4, OpenCV, Tesseract OCR
 
-sudo add-apt-repository ppa:iconnor/zoneminder-1.34
+git clone https://github.com/theAIGuysCode/yolov4-custom-functions.git
 
-sudo apt-get update
+conda env create -f conda-gpu.yml
 
-apt install zoneminder
+conda activate yolov4-gpu
 
-## Mysql Nastaveni
+# Stažení rozpoznávání SPZ
 
-rm /etc/mysql/my.cnf 
+https://drive.google.com/file/d/1EUPtbtdF0bjRtNjGv436vDY28EN5DXDH/view?usp=sharing
 
-cp /etc/mysql/mysql.conf.d/mysqld.cnf /etc/mysql/my.cnf
+vložení custom.weight do yolov4-custom-functions\data
 
-/etc/init.d/mysql start
+vytvoření vlastní třídy core\data\classes\custom.names
 
-mysql
+napsání do třídy custom.names "license_plate"
 
-ALTER USER 'root'@'localhost' IDENTIFIED BY 'yourpassword';
+přepsání řádku v core\config.py "./data/classes/coco.names na ./data/classes/custom.names"
 
-FLUSH PRIVILEGES ;
+# Načtení yolov4 darknet style a převedení do tensorflow
 
-quit
+python save_model.py --weights ./data/custom.weights --output ./checkpoints/custom-416 --input_size 416 --model yolov4 
 
-## Vytvoření databáze 
+# Stáhněte Tesseract OCR
 
-mysql -uroot -p < /usr/share/zoneminder/db/zm_create.sql
+# Test rozpoznáví SPZ
+ 
+ python detect.py --weights ./checkpoints/custom-416 --size 416 --model yolov4 --images ./data/images/car2.jpg --plate
 
-mysql 
-
-CREATE USER 'zmuser'@localhost IDENTIFIED BY 'zmpass'; 
-
-GRANT ALL PRIVILEGES ON zm.* TO 'zmuser'@'localhost' WITH GRANT OPTION; 
-
-FLUSH PRIVILEGES ; 
-
-quit 
-
-mysqladmin -uroot -p reload
-
-## Nastavení Zoneminderu
-
-chmod 740 /etc/zm/zm.conf
-
-chown root:www-data /etc/zm/zm.conf 
-
-adduser www-data video
-
-a2enmod cgi 
-
-a2enconf zoneminder
-
-a2enmod rewrite 
-
-a2enmod headers 
-
-## Zapnutí serveru
-
-systemctl enable zoneminder
-
-service zoneminder start
-
-service apache2 reload
+# Když nefunguje vložte "pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'" na poslední řádek core\utils.py

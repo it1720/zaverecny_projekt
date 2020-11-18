@@ -1,5 +1,4 @@
 import os
-import subprocess
 import json
 os.system('dir /b C:\\zaverecny_projekt\yolov4-custom-functions\data\\video\\video\ZONHS > videos.txt')
 os.system('dir /b C:\\zaverecny_projekt\yolov4-custom-functions\detections > detected_videos.txt')

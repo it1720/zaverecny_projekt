@@ -1,3 +1,4 @@
+  
 import os
 import json
 import datetime 
@@ -24,16 +25,15 @@ with open('data.json') as data_file:
 for c in cars['cars']:
     if plateholder_num == c['plateholder']: 
         car_owner = c['name']
-if car_owner != "":
-    print(car_owner)
-else:
+if car_owner == "":
     car_owner="unknown"
-time = now.strftime("%d.%m.%Y %H:%M:%S")
-print(time)
+date = now.strftime("%d.%m.%Y")
+time = now.strftime("%H:%M:%S")
 data['data'].append({
     'id': len(data['data'])+1,
     'plateholder': plateholder_num,
     'owner': car_owner,
+    'date' : date,
     'time' : time
 })
 with open('data.json', 'w') as outfile:

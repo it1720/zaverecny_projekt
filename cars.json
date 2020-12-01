@@ -1,0 +1,12 @@
+{
+    "cars": [
+        {
+            "name": "Tomáš Novák",
+            "plateholder": "4SY5152"
+        },
+        {
+            "name": "Franta Stříbný",
+            "plateholder": "5SY5152"
+        }
+    ]
+} 

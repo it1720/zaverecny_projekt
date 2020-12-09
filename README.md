@@ -24,7 +24,7 @@ python save_model.py --weights ./data/custom.weights --output ./checkpoints/cust
 
 # Stáhněte Tesseract OCR
 
-# Test rozpoznáví SPZ
+# Test rozpoznávání SPZ
  
  python detect.py --weights ./checkpoints/custom-416 --size 416 --model yolov4 --images ./data/images/car2.jpg --plate
 

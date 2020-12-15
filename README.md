@@ -6,7 +6,7 @@ conda env create -f conda-gpu.yml
 
 conda activate yolov4-gpu
 
-# Stažení rozpoznávání SPZ
+# Stažení rozpoznání SPZ
 
 https://drive.google.com/file/d/1EUPtbtdF0bjRtNjGv436vDY28EN5DXDH/view?usp=sharing
 
@@ -24,7 +24,7 @@ python save_model.py --weights ./data/custom.weights --output ./checkpoints/cust
 
 # Stáhněte Tesseract OCR
 
-# Test rozpoznávání SPZ
+# Test rozpoznání SPZ
  
  python detect.py --weights ./checkpoints/custom-416 --size 416 --model yolov4 --images ./data/images/car2.jpg --plate
 

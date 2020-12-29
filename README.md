@@ -1,4 +1,4 @@
-# YOLOv4, OpenCV, Tesseract OCR
+# YOLOv4, OpenCV, Tesseract OCR, rozpoznání SPZ
 
 git clone https://github.com/theAIGuysCode/yolov4-custom-functions.git
 
@@ -22,10 +22,12 @@ přepsání řádku v core\config.py "./data/classes/coco.names na ./data/classe
 
 python save_model.py --weights ./data/custom.weights --output ./checkpoints/custom-416 --input_size 416 --model yolov4 
 
-# Stáhněte Tesseract OCR
+# Stažení Tesseract OCR
+[Windows install](https://github.com/UB-Mannheim/tesseract/wiki)
+[Linux install](https://linuxhint.com/install-tesseract-ocr-linux/)
+# Přídání Tesseract OCR do PATH
 
 # Test rozpoznání SPZ
- 
+
  python detect.py --weights ./checkpoints/custom-416 --size 416 --model yolov4 --images ./data/images/car2.jpg --plate
 
- (Když nefunguje vložte "pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'" na poslední řádek core\utils.py)

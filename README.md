@@ -23,8 +23,10 @@ přepsání řádku v core\config.py "./data/classes/coco.names na ./data/classe
 python save_model.py --weights ./data/custom.weights --output ./checkpoints/custom-416 --input_size 416 --model yolov4 
 
 # Stažení Tesseract OCR
-[Windows install](https://github.com/UB-Mannheim/tesseract/wiki)
+[Windows install](https://github.com/UB-Mannheim/tesseract/wiki)     
+
 [Linux install](https://linuxhint.com/install-tesseract-ocr-linux/)
+
 # Přídání Tesseract OCR do PATH
 
 # Test rozpoznání SPZ

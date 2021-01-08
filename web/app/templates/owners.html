@@ -3,7 +3,7 @@
 <html lang="cs">
 
 <head>
-  <title>Seznam aut</title>
+  <title>Seznam vlastníků</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="author" content="Matěj Říčný">
@@ -12,7 +12,7 @@
 
 <body>
   <header class="text-center text-uppercase p-5" style="background-color: rgb(58, 54, 54);">
-    <h1 class="display-1 text-white"><b>Seznam aut</b></h1>
+    <h1 class="display-1 text-white"><b>seznam vlastníků</b></h1>
   </header>
 
   <main class="container">
@@ -24,19 +24,16 @@
             <th>SPZ</th>
             <th>Jméno</th>
             <th>Příjmení</th>
-            <th>Čas</th>
-            <th>Datum</th>
           </tr>
         </thead>
         <tbody>
-          {% for test in auta %}
+          {% for test in vlastnici%}
           <tr>
             <td>{{test.id}}</td>
             <td>{{test.spz}}</td>
             <td>{{test.jmeno}}</td>
             <td>{{test.prijmeni}}</td>
-            <td>{{test.cas}}</td>
-            <td>{{test.datum}}</td>
+            <td><a href="/delete/{{test.id}}">SMAZAT</a></td>
           </tr>
           {% endfor %}
         </tbody>

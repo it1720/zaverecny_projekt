@@ -5,10 +5,11 @@ import numpy as np
 import tensorflow as tf
 import pytesseract
 from core.config import cfg
-
+import smtplib, ssl
 import re
-
+import mysql.connector
 import datetime 
+import smtplib, ssl 
 
 
 # If you don't have tesseract executable in your PATH, include the following:
@@ -84,7 +85,7 @@ def recognize_plate(img, coords):
         except: 
             text = None
     if plate_num != None:
-        postData(plate_num)
+        print(plate_num)
 
         
     #cv2.imshow("Character's Segmented", im2)
@@ -487,8 +488,6 @@ def unfreeze_all(model, frozen=False):
             unfreeze_all(l, frozen)
 def correct_spz(plate_num):
     return True
-def postData(plate_num):
-    if(correct_spz(plate_num)):
-        print("SPZ "+ plate_num)
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
+
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract' 

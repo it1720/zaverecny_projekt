@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+  <title>Seznam aut</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="author" content="Matěj Říčný">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+</head>
+
+<body>
+  <header class="text-center text-uppercase p-5" style="background-color: rgb(58, 54, 54);">
+    <h1 class="display-1 text-white"><b>Seznam aut</b></h1>
+  </header>
+
+  <main class="container">
+    <div>
+      <table class="table table-striped ">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>SPZ</th>
+            <th>Jméno</th>
+            <th>Příjmení</th>
+            <th>Čas</th>
+            <th>Datum</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for test in auta %}
+          <tr>
+            <td>{{test.id}}</td>
+            <td>{{test.spz}}</td>
+            <td>{{test.jmeno}}</td>
+            <td>{{test.prijmeni}}</td>
+            <td>{{test.cas}}</td>
+            <td>{{test.datum}}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+  <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+</body>
+
+</html>

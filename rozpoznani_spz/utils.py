@@ -5,16 +5,17 @@ import numpy as np
 import tensorflow as tf
 import pytesseract
 from core.config import cfg
-
+import smtplib, ssl
 import re
-
+import mysql.connector
 import datetime 
+import smtplib, ssl 
 
 
 # If you don't have tesseract executable in your PATH, include the following:
 # pytesseract.pytesseract.tesseract_cmd = r'<full_path_to_your_tesseract_executable>'
 # Example tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
-
+plates=[]
 # function to recognize license plate numbers using Tesseract OCR
 def recognize_plate(img, coords):
     # separate coordinates from box
@@ -50,6 +51,7 @@ def recognize_plate(img, coords):
     im2 = gray.copy()
     # create blank string to hold license plate number
     plate_num = ""
+    
     # loop through contours and find individual letters and numbers in license plate
     for cnt in sorted_contours:
         x,y,w,h = cv2.boundingRect(cnt)
@@ -82,9 +84,30 @@ def recognize_plate(img, coords):
             clean_text = re.sub('[\W_]+', '', text)
             plate_num += clean_text
         except: 
-            text = None
+            text = None 
     if plate_num != None:
-        postData(plate_num)
+        # Pole pro SPZ ze kterého budeme vybírat nejlépe přečtenou SPZ 
+        plates.append(plate_num)
+        print(plates)
+    # Po té co auto projede, nebo není detekované žádné auto
+    if plate_num == '':
+        # Pokud není pole prázdné
+        if(len(plates) > 0):
+            best_plate = ''
+            # Vybírání nejlepší SPZ podle délky
+            for plate in plates:
+                if( len(best_plate) < len(plate)):
+                    best_plate = plate
+            print("Nejlepší: " + best_plate)
+            # Získání jména vlastníka podle SPZ
+            owners_name = ownersName(best_plate)
+            # Uložení SPZ do databáze
+            postData(owners_name,plate_num)
+            # Poslání SPZ emailem
+            sendEmail(owners_name,plate_num)
+            # Vyčištění pole
+            plates = []
+
 
         
     #cv2.imshow("Character's Segmented", im2)
@@ -486,9 +509,83 @@ def unfreeze_all(model, frozen=False):
         for l in model.layers:
             unfreeze_all(l, frozen)
 def correct_spz(plate_num):
-    pass
-def postData(plate_num):
-    if(correct_spz(plate_num)):
-        print("SPZ "+ plate_num)
+    return True
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
+def ownersName(plate_num):
+    owner=""
+    mydb = mysql.connector.connect(host='localhost',database='auta',user='root',password='')
+    mycursor = mydb.cursor()
+    #Podle spz získáme jméno a příjmení vlastníka auta z databáze mysql
+    mycursor.execute("SELECT CONCAT (jmeno, ' ',prijmeni) as vlastnik FROM vlastnici where spz = '"+ plate_num + "'")
+    myresult = mycursor.fetchone()
+    # Rozdělení jména a příjmení
+    if myresult!="":
+        for row in myresult:
+                owner = row.split(" ")
+    return owner
+
+def postData(owner,plate_num):
+    # Datum a čas ze systému
+    now = datetime.datetime.now()
+    mydb = mysql.connector.connect(host='localhost',database='auta',user='root',password='')
+    mycursor = mydb.cursor()
+    if owner!="":
+        #Jméno
+        owners_name=ownersName(plate_num)[0]
+        #Příjmení
+        owners_surname=ownersName(plate_num)[1]
+    # Pokud není SPZ v databázi, nastaví se jméno a příjmení na neznámé
+    else:
+        owners_name="neznámé"
+        owners_surname="neznámé"
+    date = now.strftime("%Y-%m-%d")
+    time = now.strftime("%H:%M:%S")
+    #Vložení dat do mysql databáze
+    sql = "INSERT INTO data (spz, jmeno, prijmeni, datum, cas) VALUES (%s, %s, %s, %s, %s)"
+    val = (plate_num,owners_name,owners_surname,date,time)
+    mycursor.execute(sql, val)
+    mydb.commit()
+
+
+def sendEmail(owner,plate_num):
+    if owner!="":
+        #Jméno
+        owners_name=ownersName(plate_num)[0]
+        #Příjmení
+        owners_surname=ownersName(plate_num)[1]
+    # Pokud není SPZ v databázi, nastaví se jméno a příjmení na neznámé
+    else:
+        owners_name="neznámé"
+        owners_surname="neznámé"
+    # Datum a čas ze systému
+    now = datetime.datetime.now()   
+    port = 465 
+    smtp_server = "smtp.gmail.com"
+    # Odesílatel
+    sender_email = "emailforspz55@gmail.com"
+    # Příjemce
+    receiver_email = "mat.ricny@gmail.com"
+    # Heslo(změnit)
+    password = "****"
+    date = now.strftime("%d. %m. %Y")
+    time = now.strftime("%H: %M: %S")
+    # Zpráva
+    message = """\
+    Subject: SPZ
+
+    """f"""
+    SPZ:              {plate_num}
+
+    Vlastník:         {owners_name} {owners_surname}
+    
+    Datum:            {date}
+    
+    Čas:              {time}
+    .""".encode('utf-8').strip()
+    context = ssl.create_default_context()
+    # Odeslání
+    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, message)
+
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract' 

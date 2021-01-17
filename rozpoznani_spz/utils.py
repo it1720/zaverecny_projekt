@@ -10,14 +10,29 @@ import re
 import mysql.connector
 import datetime 
 import smtplib, ssl 
+import base64
 
 
 # If you don't have tesseract executable in your PATH, include the following:
 # pytesseract.pytesseract.tesseract_cmd = r'<full_path_to_your_tesseract_executable>'
 # Example tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
 
+
+
+# Pole rozpozných SPZ jednoho auta
+plates = []
+# Číslo pro pořízení fotky pro první
+number = 0
+# Obrázek auta
+car_image = ''
+# Jméno souboru ve kterém je obrázek uložen
+file_name = ''
 # function to recognize license plate numbers using Tesseract OCR
 def recognize_plate(img, coords):
+    global plates
+    global number
+    global car_image
+  
     # separate coordinates from box
     xmin, ymin, xmax, ymax = coords
     # get the subimage that makes up the bounded region and take an additional 5 pixels on each side
@@ -38,6 +53,10 @@ def recognize_plate(img, coords):
     rect_kern = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
     # apply dilation to make regions more clear
     dilation = cv2.dilate(thresh, rect_kern, iterations = 1)
+
+    #cv2.imshow("Dilation", dilation)
+    #cv2.waitKey(0)
+    # find contours of regions of interest within license plate
     #cv2.imshow("Dilation", dilation)
     #cv2.waitKey(0)
     # find contours of regions of interest within license plate
@@ -51,6 +70,7 @@ def recognize_plate(img, coords):
     im2 = gray.copy()
     # create blank string to hold license plate number
     plate_num = ""
+    
     # loop through contours and find individual letters and numbers in license plate
     for cnt in sorted_contours:
         x,y,w,h = cv2.boundingRect(cnt)
@@ -84,13 +104,39 @@ def recognize_plate(img, coords):
             plate_num += clean_text
         except: 
             text = None
+    
     if plate_num != None:
-        print(plate_num)
-
-        
+        number += 1 
+        # Pole pro SPZ ze kterého budeme vybírat nejlépe přečtenou SPZ
+        plates.append(plate_num)
+        print(plates)
+    # Po té co auto projede, nebo není detekované žádné auto
+    if plate_num == '':
+        # Pokud byla detekována SPZ
+        if(len(plates) > 0):
+            best_plate = ''
+            # Vybírání nejlepší SPZ podle délky
+            for plate in plates:
+                if( len(best_plate) < len(plate)):
+                    best_plate = plate
+            print("Nejlepší: " + best_plate)
+            # Získání jména vlastníka podle SPZ
+            #owners_name = ownersName(best_plate)
+            # Uložení SPZ do databáze
+            #postData(owners_name,plate_num)
+            # Poslání SPZ emailem
+            #sendEmail(owners_name,plate_num)
+            # Resetování hodnot
+            plates = []
+            number = 0
+            car_image = ''
+            #print(result_image)
+            #saveVideo()      
     #cv2.imshow("Character's Segmented", im2)
     #cv2.waitKey(0)
     return plate_num
+
+
 
 def load_freeze_layer(model='yolov4', tiny=False):
     if tiny:
@@ -221,13 +267,23 @@ def format_boxes(bboxes, image_height, image_width):
     return bboxes
 
 def draw_bbox(image, bboxes, info = False, counted_classes = None, show_label=True, allowed_classes=list(read_class_names(cfg.YOLO.CLASSES).values()), read_plate = False):
+    global car_image
+    global number
+    global file_name
+    if number == 0:
+        # Nastavení obrázku auta
+        car_image = image
+        now = datetime.datetime.now()
+        time = now.strftime("%d_%m_%Y__%H_%M_%S")
+        file_name = time
+        # Uložení fotky
+        cv2.imwrite("./data/output_images/"+ file_name +".jpg", image)
     classes = read_class_names(cfg.YOLO.CLASSES)
     num_classes = len(classes)
     image_h, image_w, _ = image.shape
     hsv_tuples = [(1.0 * x / num_classes, 1., 1.) for x in range(num_classes)]
     colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
     colors = list(map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)), colors))
-
     random.seed(0)
     random.shuffle(colors)
     random.seed(None)
@@ -486,8 +542,86 @@ def unfreeze_all(model, frozen=False):
     if isinstance(model, tf.keras.Model):
         for l in model.layers:
             unfreeze_all(l, frozen)
-def correct_spz(plate_num):
-    return True
 
+
+def ownersName(plate_num):
+    owner=""
+    mydb = mysql.connector.connect(host='localhost',database='auta',user='root',password='')
+    mycursor = mydb.cursor()
+    #Podle spz získáme jméno a příjmení vlastníka auta z databáze mysql
+    mycursor.execute("SELECT CONCAT (jmeno, ' ',prijmeni) as vlastnik FROM vlastnici where spz = '"+ plate_num + "'")
+    myresult = mycursor.fetchone()
+    # Rozdělení jména a příjmení
+    if myresult != None:
+        for row in myresult:
+                owner = row.split(" ")
+    return owner
+    
+
+def postData(owner,plate_num):
+    global car_image
+    global file_name
+    now = datetime.datetime.now()
+    mydb = mysql.connector.connect(host='localhost',database='auta',user='root',password='')
+    mycursor = mydb.cursor()
+    if owner!="":
+        #Jméno
+        owners_name=ownersName(plate_num)[0]
+        #Příjmení
+        owners_surname=ownersName(plate_num)[1]
+    else:
+        owners_name="neznámé"
+        owners_surname="neznámé"
+    date = now.strftime("%Y-%m-%d")
+    time = now.strftime("%H:%M:%S")
+    # Otevření souboru s fotkou
+    imager = open("./data/output_images/"+ file_name +".jpg", 'rb').read()
+    #Vložení dat do mysql databáze
+    sql = "INSERT INTO data (spz, jmeno, prijmeni, datum, cas, foto) VALUES (%s, %s, %s, %s, %s, %s)"
+    val = (plate_num,owners_name,owners_surname,date,time,imager)
+    mycursor.execute(sql, val)
+    mydb.commit()
+
+
+def sendEmail(owner,plate_num):
+    if owner!="":
+        #Jméno
+        owners_name=ownersName(plate_num)[0]
+        #Příjmení
+        owners_surname=ownersName(plate_num)[1]
+    # Pokud není SPZ v databázi, nastaví se jméno a příjmení na neznámé
+    else:
+        owners_name="neznámé"
+        owners_surname="neznámé"
+    # Datum a čas ze systému
+    now = datetime.datetime.now()   
+    port = 465 
+    smtp_server = "smtp.gmail.com"
+    # Odesílatel
+    sender_email = "emailforspz55@gmail.com"
+    # Příjemce
+    receiver_email = "mat.ricny@gmail.com"
+    # Heslo(změnit)
+    password = "****"
+    date = now.strftime("%d. %m. %Y")
+    time = now.strftime("%H: %M: %S")
+    # Zpráva
+    message = """\
+    Subject: SPZ
+
+    """f"""
+    SPZ:              {plate_num}
+
+    Vlastník:         {owners_name} {owners_surname}
+    
+    Datum:            {date}
+    
+    Čas:              {time}
+    .""".encode('utf-8').strip()
+    context = ssl.create_default_context()
+    # Odeslání
+    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, message)
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract' 

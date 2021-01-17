@@ -17,6 +17,8 @@ import cv2
 import numpy as np
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
+import datetime 
+
 
 
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
@@ -35,6 +37,7 @@ flags.DEFINE_boolean('dont_show', False, 'dont show video output')
 flags.DEFINE_boolean('info', False, 'print info on detections')
 flags.DEFINE_boolean('crop', False, 'crop detections from images')
 flags.DEFINE_boolean('plate', False, 'perform license plate recognition')
+
 
 def main(_argv):
     config = ConfigProto()
@@ -71,7 +74,10 @@ def main(_argv):
         height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = int(vid.get(cv2.CAP_PROP_FPS))
         codec = cv2.VideoWriter_fourcc(*FLAGS.output_format)
-        out = cv2.VideoWriter(FLAGS.output, codec, fps, (width, height))
+        now = datetime.datetime.now()
+        date = now.strftime("%d_%m_%Y__%H_%M_%S")
+        # Název pro video podle data
+        out = cv2.VideoWriter("./detections/" + date +".avi", codec, fps, (width, height))
 
     frame_num = 0
     while True:
@@ -80,6 +86,7 @@ def main(_argv):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame_num += 1
             image = Image.fromarray(frame)
+            
         else:
             print('Video has ended or failed, try a different video format!')
             break
@@ -165,7 +172,6 @@ def main(_argv):
         result = np.asarray(image)
         cv2.namedWindow("result", cv2.WINDOW_AUTOSIZE)
         result = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        
         if not FLAGS.dont_show:
             cv2.imshow("result", result)
         
@@ -174,10 +180,12 @@ def main(_argv):
         if cv2.waitKey(1) & 0xFF == ord('q'): break
     cv2.destroyAllWindows()
 
+
+
 if __name__ == '__main__':
     try:
         app.run(main)
     except SystemExit:
         pass
 
-#python detect_video.py --weights ./checkpoints/custom-416 --size 416 --model yolov4 --video http://192.168.1.134:8080/video --output ./detections/recognition.avi --plate
+#v

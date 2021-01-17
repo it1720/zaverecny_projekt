@@ -7,11 +7,12 @@ class Data(models.Model):
     prijmeni = models.CharField(max_length=30)
     cas = models.TimeField(auto_now=False, auto_now_add=False)
     datum = models.DateField(auto_now=False, auto_now_add=False)
+    foto = models.BinaryField(upload_to="media")
     class Meta:
         db_table = "data"
 
 class Owners(models.Model):
-    spz = models.CharField(max_length=8)
+    spz = models.CharField(min_lengt=7,max_length=8)
     jmeno = models.CharField(max_length=20)
     prijmeni = models.CharField(max_length=30)
     class Meta:

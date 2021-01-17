@@ -16,7 +16,6 @@ import base64
 # If you don't have tesseract executable in your PATH, include the following:
 # pytesseract.pytesseract.tesseract_cmd = r'<full_path_to_your_tesseract_executable>'
 # Example tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract'
-<<<<<<< HEAD
 
 
 
@@ -28,9 +27,6 @@ number = 0
 car_image = ''
 # Jméno souboru ve kterém je obrázek uložen
 file_name = ''
-=======
-plates=[]
->>>>>>> 5ee7920e7af65af534e905edcafb7af5cdd68335
 # function to recognize license plate numbers using Tesseract OCR
 def recognize_plate(img, coords):
     global plates
@@ -107,26 +103,16 @@ def recognize_plate(img, coords):
             clean_text = re.sub('[\W_]+', '', text)
             plate_num += clean_text
         except: 
-<<<<<<< HEAD
             text = None
     
     if plate_num != None:
         number += 1 
         # Pole pro SPZ ze kterého budeme vybírat nejlépe přečtenou SPZ
-=======
-            text = None 
-    if plate_num != None:
-        # Pole pro SPZ ze kterého budeme vybírat nejlépe přečtenou SPZ 
->>>>>>> 5ee7920e7af65af534e905edcafb7af5cdd68335
         plates.append(plate_num)
         print(plates)
     # Po té co auto projede, nebo není detekované žádné auto
     if plate_num == '':
-<<<<<<< HEAD
         # Pokud byla detekována SPZ
-=======
-        # Pokud není pole prázdné
->>>>>>> 5ee7920e7af65af534e905edcafb7af5cdd68335
         if(len(plates) > 0):
             best_plate = ''
             # Vybírání nejlepší SPZ podle délky
@@ -135,7 +121,6 @@ def recognize_plate(img, coords):
                     best_plate = plate
             print("Nejlepší: " + best_plate)
             # Získání jména vlastníka podle SPZ
-<<<<<<< HEAD
             #owners_name = ownersName(best_plate)
             # Uložení SPZ do databáze
             #postData(owners_name,plate_num)
@@ -147,18 +132,6 @@ def recognize_plate(img, coords):
             car_image = ''
             #print(result_image)
             #saveVideo()      
-=======
-            owners_name = ownersName(best_plate)
-            # Uložení SPZ do databáze
-            postData(owners_name,plate_num)
-            # Poslání SPZ emailem
-            sendEmail(owners_name,plate_num)
-            # Vyčištění pole
-            plates = []
-
-
-        
->>>>>>> 5ee7920e7af65af534e905edcafb7af5cdd68335
     #cv2.imshow("Character's Segmented", im2)
     #cv2.waitKey(0)
     return plate_num
@@ -570,82 +543,6 @@ def unfreeze_all(model, frozen=False):
         for l in model.layers:
             unfreeze_all(l, frozen)
 
-def ownersName(plate_num):
-    owner=""
-    mydb = mysql.connector.connect(host='localhost',database='auta',user='root',password='')
-    mycursor = mydb.cursor()
-    #Podle spz získáme jméno a příjmení vlastníka auta z databáze mysql
-    mycursor.execute("SELECT CONCAT (jmeno, ' ',prijmeni) as vlastnik FROM vlastnici where spz = '"+ plate_num + "'")
-    myresult = mycursor.fetchone()
-    # Rozdělení jména a příjmení
-    if myresult!="":
-        for row in myresult:
-                owner = row.split(" ")
-    return owner
-
-def postData(owner,plate_num):
-    # Datum a čas ze systému
-    now = datetime.datetime.now()
-    mydb = mysql.connector.connect(host='localhost',database='auta',user='root',password='')
-    mycursor = mydb.cursor()
-    if owner!="":
-        #Jméno
-        owners_name=ownersName(plate_num)[0]
-        #Příjmení
-        owners_surname=ownersName(plate_num)[1]
-    # Pokud není SPZ v databázi, nastaví se jméno a příjmení na neznámé
-    else:
-        owners_name="neznámé"
-        owners_surname="neznámé"
-    date = now.strftime("%Y-%m-%d")
-    time = now.strftime("%H:%M:%S")
-    #Vložení dat do mysql databáze
-    sql = "INSERT INTO data (spz, jmeno, prijmeni, datum, cas) VALUES (%s, %s, %s, %s, %s)"
-    val = (plate_num,owners_name,owners_surname,date,time)
-    mycursor.execute(sql, val)
-    mydb.commit()
-
-
-def sendEmail(owner,plate_num):
-    if owner!="":
-        #Jméno
-        owners_name=ownersName(plate_num)[0]
-        #Příjmení
-        owners_surname=ownersName(plate_num)[1]
-    # Pokud není SPZ v databázi, nastaví se jméno a příjmení na neznámé
-    else:
-        owners_name="neznámé"
-        owners_surname="neznámé"
-    # Datum a čas ze systému
-    now = datetime.datetime.now()   
-    port = 465 
-    smtp_server = "smtp.gmail.com"
-    # Odesílatel
-    sender_email = "emailforspz55@gmail.com"
-    # Příjemce
-    receiver_email = "mat.ricny@gmail.com"
-    # Heslo(změnit)
-    password = "****"
-    date = now.strftime("%d. %m. %Y")
-    time = now.strftime("%H: %M: %S")
-    # Zpráva
-    message = """\
-    Subject: SPZ
-
-    """f"""
-    SPZ:              {plate_num}
-
-    Vlastník:         {owners_name} {owners_surname}
-    
-    Datum:            {date}
-    
-    Čas:              {time}
-    .""".encode('utf-8').strip()
-    context = ssl.create_default_context()
-    # Odeslání
-    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message)
 
 def ownersName(plate_num):
     owner=""

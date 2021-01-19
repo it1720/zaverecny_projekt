@@ -1,6 +1,7 @@
 from django.shortcuts import render,redirect
 from app.models import Data,Owners
 from .forms import FormOwners
+import base64
 
 def showData(request):
     data = Data.objects.all()

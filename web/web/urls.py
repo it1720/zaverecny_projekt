@@ -21,11 +21,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('showdata',showData),
+    path('',showData),
     path('showform',showForm),
     path('showowners',showOwners),
     path('delete/<int:id>',delOwner)
-]
-if settings.DEBUG:
-        urlpatterns += static(settings.MEDIA_URL,
-                              document_root=settings.MEDIA_ROOT)
+    
+]+ static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+
